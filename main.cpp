@@ -40,6 +40,19 @@ int main(int argc, char* argv[]) {
                 running = 0;
             }
         }
+        
+
+        SDL_Surface* icon = SDL_LoadBMP("icon.bmp");
+        if (!icon) {
+            printf("Erreur de chargement de l'icône: %s\n", SDL_GetError());
+        }
+        else {
+            SDL_SetWindowIcon(window, icon);                        // icon de la fenetre
+            SDL_FreeSurface(icon);            
+        }
+
+
+
 
         SDL_RenderClear(renderer);
         SDL_RenderCopy(renderer, background, NULL, NULL);

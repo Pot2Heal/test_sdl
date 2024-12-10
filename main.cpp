@@ -1,70 +1,66 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <SDL2/SDL.h>
+#include "animation.h"
 
 int main(int argc, char* argv[]) {
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Erreur SDL_Init: %s\n", SDL_GetError());
         return -1;
     }
-    // Création de la Fenetre
+
     SDL_Window* window = SDL_CreateWindow("DragonBouleZ", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 480, SDL_WINDOW_SHOWN);
-    if (!window) {                                                                                                                                  
+    if (!window) {
         printf("Erreur création fenêtre: %s\n", SDL_GetError());
         SDL_Quit();
         return -1;
     }
-    //Affichage de la Fenetre
+
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
-        printf("Erreur création renderer: %s\n", SDL_GetError());                           
+        printf("Erreur création renderer: %s\n", SDL_GetError());
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
-    //importation de l'image de fond 
-    SDL_Texture* background = SDL_CreateTextureFromSurface(renderer, SDL_LoadBMP("mainmenu.bmp"));
-    if (!background) {
-        printf("Erreur du chargement de l'image: %s\n", SDL_GetError());              
+
+    SDL_Texture* spriteSheet = loadTexture("sprite.bmp", renderer);
+    if (!spriteSheet) {
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
-    //Boucle pour afficher l'image de Fond 
-    int running = 1;
+
+    int frameWidth = 32;
+    int frameHeight = 32;
+    int numFrames = 6;
+    float scaleFactor = 2.0f;
+
+    SDL_Rect spriteRect = { 100, 100, frameWidth, frameHeight };
+
+    bool running = true;
     SDL_Event event;
+    float speed = 0.1f; // Définir la vitesse fractionnaire
+
     while (running) {
-        while (SDL_PollEvent(&event)) {                                  
+        while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
-                running = 0;
+                running = false;
             }
         }
-        
-        // Affichage de l'icone 
-        SDL_Surface* icon = SDL_LoadBMP("icon.bmp");
-        if (!icon) {
-            printf("Erreur de chargement de l'icône: %s\n", SDL_GetError());
-        }
-        else {
-            SDL_SetWindowIcon(window, icon);                   
-            SDL_FreeSurface(icon);            
-        }
 
+        const Uint8* keyState = SDL_GetKeyboardState(NULL);
+        moveSprite(&spriteRect, 640, 480, speed, keyState);
 
-
-
-
-
-
-
+        SDL_SetRenderDrawColor(renderer, 135, 206, 250, 255);
         SDL_RenderClear(renderer);
-        SDL_RenderCopy(renderer, background, NULL, NULL);
+
+        animateSprite(spriteSheet, renderer, frameWidth, frameHeight, numFrames, scaleFactor, spriteRect.x, spriteRect.y);
+
         SDL_RenderPresent(renderer);
     }
 
-    SDL_DestroyTexture(background);
-    SDL_DestroyRenderer(renderer);                                          // Liberation de l'espace 
+    SDL_DestroyTexture(spriteSheet);
+    SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
 

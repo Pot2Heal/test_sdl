@@ -1,6 +1,6 @@
 #include "animation.h"
 
-// Charge une texture à partir d'un fichier BMP
+// Charger une texture à partir d'un fichier BMP
 SDL_Texture* loadTexture(const char* filename, SDL_Renderer* renderer) {
     SDL_Surface* surface = SDL_LoadBMP(filename);
     if (!surface) {
@@ -16,15 +16,14 @@ SDL_Texture* loadTexture(const char* filename, SDL_Renderer* renderer) {
     return texture;
 }
 
-// Affiche une animation à partir d'une feuille de sprites
+// Afficher l'animation d'un sprite à partir d'une feuille de sprites
 void animateSprite(SDL_Texture* spriteSheet, SDL_Renderer* renderer, int frameWidth, int frameHeight, int numFrames, float scaleFactor, int x, int y) {
     static Uint32 lastFrameTime = 0;
     static int currentFrame = 0;
 
     Uint32 currentTime = SDL_GetTicks();
     if (currentTime > lastFrameTime + 200) {
- 
-     lastFrameTime = currentTime;
+        lastFrameTime = currentTime;
         currentFrame = (currentFrame + 1) % numFrames;
     }
 
@@ -32,23 +31,4 @@ void animateSprite(SDL_Texture* spriteSheet, SDL_Renderer* renderer, int frameWi
     SDL_Rect destRect = { x, y, (int)(frameWidth * scaleFactor), (int)(frameHeight * scaleFactor) };
 
     SDL_RenderCopy(renderer, spriteSheet, &srcRect, &destRect);
-}
-
-// Déplace le sprite en fonction des touches pressées
-void moveSprite(SDL_Rect* destRect, int windowWidth, int windowHeight, float speed, const Uint8* keyState) {
-    static float x = destRect->x;
-    static float y = destRect->y;
-
-    if (keyState[SDL_SCANCODE_W]) y -= speed;
-    if (keyState[SDL_SCANCODE_S]) y += speed;
-    if (keyState[SDL_SCANCODE_D]) x += speed;
-    if (keyState[SDL_SCANCODE_A]) x -= speed;
-
-    if (x < 0) x = 0;
-    if (y < 0) y = 0;
-    if (x + destRect->w > windowWidth) x = windowWidth - destRect->w;
-    if (y + destRect->h > windowHeight) y = windowHeight - destRect->h;
-
-    destRect->x = (int)x;
-    destRect->y = (int)y;
 }

@@ -4,7 +4,7 @@
 
 // Charger la carte à partir d'un fichier
 Map loadMap(const char* filename, SDL_Renderer* renderer) {
-    Map map = { NULL, 0, 0, {0, 0, 1080, 480} }; // Vue initiale de la carte
+    Map map = { NULL, 0, 0, {0, 0, 1080, 480} };
     SDL_Surface* surface = SDL_LoadBMP(filename);
     if (!surface) {
         printf("Erreur lors du chargement de l'image de la carte: %s\n", SDL_GetError());
@@ -12,6 +12,9 @@ Map loadMap(const char* filename, SDL_Renderer* renderer) {
     }
 
     map.texture = SDL_CreateTextureFromSurface(renderer, surface);
+    if (!map.texture) {
+        printf("Erreur lors de la création de la texture de la carte: %s\n", SDL_GetError());
+    }
     map.width = surface->w;
     map.height = surface->h;
     SDL_FreeSurface(surface);
@@ -21,5 +24,7 @@ Map loadMap(const char* filename, SDL_Renderer* renderer) {
 
 // Afficher la carte
 void renderMap(SDL_Renderer* renderer, Map* map) {
-    SDL_RenderCopy(renderer, map->texture, &map->viewPort, NULL); // Afficher la zone visible de la carte
+    if (map->texture) {
+        SDL_RenderCopy(renderer, map->texture, &map->viewPort, NULL);
+    }
 }

@@ -17,7 +17,7 @@ SDL_Texture* loadTexture(const char* filename, SDL_Renderer* renderer) {
 }
 
 // Afficher l'animation d'un sprite à partir d'une feuille de sprites
-void animateSprite(SDL_Texture* spriteSheet, SDL_Renderer* renderer, int frameWidth, int frameHeight, int numFrames, float scaleFactor, int x, int y) {
+void animateSprite(SDL_Texture* spriteSheet, SDL_Renderer* renderer, int frameWidth, int frameHeight, int numFrames, float scaleFactor, int x, int y, bool flipHorizontal) {
     static Uint32 lastFrameTime = 0;
     static int currentFrame = 0;
 
@@ -30,5 +30,8 @@ void animateSprite(SDL_Texture* spriteSheet, SDL_Renderer* renderer, int frameWi
     SDL_Rect srcRect = { currentFrame * frameWidth, 0, frameWidth, frameHeight };
     SDL_Rect destRect = { x, y, (int)(frameWidth * scaleFactor), (int)(frameHeight * scaleFactor) };
 
-    SDL_RenderCopy(renderer, spriteSheet, &srcRect, &destRect);
+    // Appliquer un effet de flip horizontal
+    SDL_RendererFlip flip = flipHorizontal ? SDL_FLIP_HORIZONTAL : SDL_FLIP_NONE;
+
+    SDL_RenderCopyEx(renderer, spriteSheet, &srcRect, &destRect, 0, NULL, flip);
 }

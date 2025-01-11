@@ -11,5 +11,6 @@ typedef struct {
 
 Map loadMap(const char* filename, SDL_Renderer* renderer);
 void renderMap(SDL_Renderer* renderer, Map* map);
+void moveMap(Map* map, int deltaX, int deltaY);
 
 #endif

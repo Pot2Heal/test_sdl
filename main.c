@@ -11,29 +11,29 @@ typedef struct {
 // Zoom factor
 const float zoomFactor = 1.6f;
 
-//Zones Interdite  (x, y, largeur, hauteur)
+// Zones interdites
 Rect forbiddenZones[] = {
-    {399, 245, 175, 175}, //Maison en haut a Gauche
-    {695, 259, 175, 165},// Maison en haut a Droite
-    {655, 477, 225, 145}, // Maison en bas a Gauche
-    {395, 537, 150, 25},// Barriere Millieu Gauche
-    {663, 707, 185, 25},// Barrierre En bas a Droite
-    {455, 712, 125, 250},// Etang d'eau
+    {399, 245, 175, 175},
+    {695, 259, 175, 165},
+    {655, 477, 225, 145},
+    {395, 537, 150, 25},
+    {663, 707, 185, 25},
+    {455, 712, 125, 250},
 };
 
-bool isInForbiddenZone(int x, int y, Rect* zones, int numZones) {
+int isInForbiddenZone(int x, int y, Rect* zones, int numZones) {
     for (int i = 0; i < numZones; i++) {
         Rect zone = zones[i];
         if (x >= zone.x && x < zone.x + zone.width && y >= zone.y && y < zone.y + zone.height) {
-            return true; // Le joueur est dans une zone interdite
+            return 1; // Le joueur est dans une zone interdite
         }
     }
-    return false; // Le joueur n'est pas dans une zone interdite
+    return 0; // Le joueur n'est pas dans une zone interdite
 }
 
 void renderText(SDL_Renderer* renderer, const char* text, int x, int y) {
-    SDL_Color color = { 255, 255, 255, 255 }; // Blanc
-    TTF_Font* font = TTF_OpenFont("arial.ttf", 24); // Police de caractère
+    SDL_Color color = { 255, 255, 255, 255 };
+    TTF_Font* font = TTF_OpenFont("arial.ttf", 24);
     if (!font) {
         printf("Erreur chargement de la police : %s\n", TTF_GetError());
         return;
@@ -60,7 +60,6 @@ void renderText(SDL_Renderer* renderer, const char* text, int x, int y) {
 }
 
 int main(int argc, char* argv[]) {
-    // Initialisation de SDL et SDL_ttf
     if (SDL_Init(SDL_INIT_VIDEO) < 0) {
         printf("Erreur SDL_Init: %s\n", SDL_GetError());
         return -1;
@@ -71,7 +70,6 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Création de la fenêtre
     SDL_Window* window = SDL_CreateWindow(
         "DragonBouleZ - Le Retour",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
@@ -79,12 +77,10 @@ int main(int argc, char* argv[]) {
     );
     if (!window) {
         printf("Erreur création fenêtre: %s\n", SDL_GetError());
-        SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
 
-    // Création du renderer
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         printf("Erreur création renderer: %s\n", SDL_GetError());
@@ -93,36 +89,30 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Chargement de la carte
     Map map = loadMap("Startermap.bmp", renderer);
     if (!map.texture) {
-        printf("Erreur chargement de la carte: %s\n", SDL_GetError());
+        printf("Erreur chargement de la carte\n");
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
         return -1;
     }
 
-    // Initialisation des variables joueur
-    int playerFrameWidth = 32;  // Largeur d'un sprite
-    int playerFrameHeight = 32; // Hauteur d'un sprite
-    int playerNumFramesIdle = 4;
-    int playerNumFramesMove = 6;
+    int playerFrameWidth = 32, playerFrameHeight = 32;
+    int playerNumFramesIdle = 4, playerNumFramesMove = 6;
     float playerScaleFactor = 3.0f;
+    float playerSpeed = 200.0f;
 
+    int playerX = map.width / 2 - playerFrameWidth / 2;
+    int playerY = map.height / 2 - playerFrameHeight / 2;
     SDL_RendererFlip flip = SDL_FLIP_NONE;
-
-    // Positionner le joueur au milieu de la carte
-    int playerX = map.width / 2 - playerFrameWidth / 2; // Position initiale X
-    int playerY = map.height / 2 - playerFrameHeight / 2; // Position initiale Y
-    float playerSpeed = 200.0f; // Vitesse en pixels par seconde
 
     SDL_Texture* moveSpriteSheet = loadTexture("sprite.bmp", renderer);
     SDL_Texture* idleSpriteSheet = loadTexture("spriteidle.bmp", renderer);
     SDL_Texture* currentSpriteSheet = idleSpriteSheet;
 
     if (!moveSpriteSheet || !idleSpriteSheet) {
-        printf("Erreur lors du chargement des sprites: %s\n", SDL_GetError());
+        printf("Erreur chargement des sprites\n");
         SDL_DestroyTexture(map.texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -130,106 +120,87 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Initialisation de la caméra
-    map.viewPort.w = (int)(1280 / zoomFactor); // Zoom à 1.2x
+    map.viewPort.w = (int)(1280 / zoomFactor );
     map.viewPort.h = (int)(960 / zoomFactor);
 
-    bool running = true;
-    SDL_Event event;
-
-    Uint32 lastTime = SDL_GetTicks(); // Temps de la dernière mise à jour
-    Uint32 frameDelay = 16; // Délai pour 60 FPS (environ 16ms)
-    Uint32 frameStart, frameTime;
+    Uint32 lastTime = SDL_GetTicks();
+    Uint32 frameDelay = 16;
+    int running = 1;
 
     while (running) {
-        frameStart = SDL_GetTicks();
+        Uint32 frameStart = SDL_GetTicks();
 
-        // Gestion des événements
+        SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
-                running = false;
+                running = 0;
             }
         }
 
-        // Récupération des touches appuyées
         const Uint8* keyState = SDL_GetKeyboardState(NULL);
-        bool moving = false;
-
-        // Mise à jour des coordonnées du joueur
-        int newX = playerX;
-        int newY = playerY;
+        int moving = 0;
+        int newX = playerX, newY = playerY;
 
         if (keyState[SDL_SCANCODE_W] || keyState[SDL_SCANCODE_UP]) {
-            newY -= playerSpeed * (frameDelay / 1000.0f); // Déplacement vers le haut
-            moving = true;
+            newY -= playerSpeed * (frameDelay / 1000.0f);
+            moving = 1;
         }
         if (keyState[SDL_SCANCODE_S] || keyState[SDL_SCANCODE_DOWN]) {
-            newY += playerSpeed * (frameDelay / 1000.0f); // Déplacement vers le bas
-            moving = true;
+            newY += playerSpeed * (frameDelay / 1000.0f);
+            moving = 1;
         }
         if (keyState[SDL_SCANCODE_A] || keyState[SDL_SCANCODE_LEFT]) {
-            newX -= playerSpeed * (frameDelay / 1000.0f); // Déplacement vers la gauche
-            moving = true;
-            flip = SDL_FLIP_HORIZONTAL; // Inverser le sprite
+            newX -= playerSpeed * (frameDelay / 1000.0f);
+            moving = 1;
+            flip = SDL_FLIP_HORIZONTAL;
         }
         if (keyState[SDL_SCANCODE_D] || keyState[SDL_SCANCODE_RIGHT]) {
-            newX += playerSpeed * (frameDelay / 1000.0f); // Déplacement vers la droite
-            moving = true;
-            flip = SDL_FLIP_NONE; // Pas de flip
+            newX += playerSpeed * (frameDelay / 1000.0f);
+            moving = 1;
+            flip = SDL_FLIP_NONE;
         }
 
-        // Vérifier si la nouvelle position du joueur est dans une zone interdite
         if (!isInForbiddenZone(newX, newY, forbiddenZones, sizeof(forbiddenZones) / sizeof(forbiddenZones[0]))) {
-            playerX = newX; // Appliquer la nouvelle position si valide
+            playerX = newX;
             playerY = newY;
         }
 
-        // Changer le sprite entre mouvement et idle
-        currentSpriteSheet = moving ? moveSpriteSheet : idleSpriteSheet;
+        // Update the viewport to follow the player
+        map.viewPort.x = playerX - (map.viewPort.w / 2);
+        map.viewPort.y = playerY - (map.viewPort.h / 2);
 
-        // Empêcher le joueur de sortir des limites de la carte
-        if (playerX < 0) playerX = 0;
-        if (playerY < 0) playerY = 0;
-        if (playerX > map.width - playerFrameWidth) playerX = map.width - playerFrameWidth;
-        if (playerY > map.height - playerFrameHeight) playerY = map.height - playerFrameHeight;
-
-        // Mise à jour de la vue de la carte pour suivre le joueur
-        map.viewPort.x = playerX - map.viewPort.w / 2;
-        map.viewPort.y = playerY - map.viewPort.h / 2;
-
-        // Empêcher la vue de sortir des limites de la carte
+        // Ensure the viewport stays within the map boundaries
         if (map.viewPort.x < 0) map.viewPort.x = 0;
         if (map.viewPort.y < 0) map.viewPort.y = 0;
-        if (map.viewPort.x > map.width - map.viewPort.w) map.viewPort.x = map.width - map.viewPort.w;
-        if (map.viewPort.y > map.height - map.viewPort.h) map.viewPort.y = map.height - map.viewPort.h;
+        if (map.viewPort.x + map.viewPort.w > map.width)
+            map.viewPort.x = map.width - map.viewPort.w;
+        if (map.viewPort.y + map.viewPort.h > map.height)
+            map.viewPort.y = map.height - map.viewPort.h;
 
-        // Rendu de la carte
-        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Fond noir
+        currentSpriteSheet = moving ? moveSpriteSheet : idleSpriteSheet;
+
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
         renderMap(renderer, &map);
 
-        // Animation du joueur
         if (moving) {
             animateSprite(moveSpriteSheet, renderer, playerFrameWidth, playerFrameHeight, playerNumFramesMove, playerScaleFactor, playerX, playerY, flip);
-        }
-        else {
+        } else {
             animateSprite(idleSpriteSheet, renderer, playerFrameWidth, playerFrameHeight, playerNumFramesIdle, playerScaleFactor, playerX, playerY, flip);
         }
 
-        // Afficher les coordonnées du joueur en haut à droite de l'écran
         char playerCoordinates[50];
-        sprintf_s(playerCoordinates, "X: %d, Y: %d", playerX, playerY);
+        snprintf(playerCoordinates, sizeof(playerCoordinates), "X: %d, Y: %d", playerX, playerY);
         renderText(renderer, playerCoordinates, 1100, 10);
 
-        // Présentation du rendu
         SDL_RenderPresent(renderer);
-        frameTime = SDL_GetTicks() - frameStart;
+
+        Uint32 frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }
     }
 
-    // Nettoyage
     SDL_DestroyTexture(moveSpriteSheet);
     SDL_DestroyTexture(idleSpriteSheet);
     SDL_DestroyTexture(map.texture);

@@ -26,7 +26,7 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
     int positions[][2] = {
         {462, 1275},  // Objet 1
         {1437, 735},  // Objet 2
-        {0, 0}   // Objet 3
+        {0, 0}   // Objet 3 (Caché) t pas sensé le voir ok 
     };
 
     for (int i = 0; i < count; i++) {
@@ -72,13 +72,19 @@ void renderGameObjects(SDL_Renderer* renderer, GameObjectManager* manager) {
     // Rendu des objets
     for (int i = 0; i < manager->count; i++) {
         if (!manager->objects[i].collected) {
+            // Convertir les coordonnées absolues en coordonnées écran
             SDL_Rect destRect = {
-                manager->objects[i].x - manager->viewPortX,  // Position absolue - position de la caméra
+                manager->objects[i].x - manager->viewPortX,
                 manager->objects[i].y - manager->viewPortY,
                 manager->objects[i].width,
                 manager->objects[i].height
             };
-            SDL_RenderCopy(renderer, manager->objects[i].texture, NULL, &destRect);
+
+            // Ne rendre que si l'objet est visible à l'écran
+            if (destRect.x + destRect.w >= 0 && destRect.x <= 1280 &&
+                destRect.y + destRect.h >= 0 && destRect.y <= 960) {
+                SDL_RenderCopy(renderer, manager->objects[i].texture, NULL, &destRect);
+            }
         }
     }
 
@@ -88,7 +94,7 @@ void renderGameObjects(SDL_Renderer* renderer, GameObjectManager* manager) {
 
         // Créer une texture semi-transparente pour le fond
         SDL_Surface* surface = SDL_CreateRGBSurface(0, 400, 300, 32, 0, 0, 0, 0);
-        SDL_FillRect(surface, NULL, SDL_MapRGBA(surface->format, 0, 0, 0, 192)); // 192 pour 75% d'opacité
+        SDL_FillRect(surface, NULL, SDL_MapRGBA(surface->format, 0, 0, 0, 192));
         SDL_Texture* overlay = SDL_CreateTextureFromSurface(renderer, surface);
         SDL_SetTextureBlendMode(overlay, SDL_BLENDMODE_BLEND);
         SDL_FreeSurface(surface);
@@ -139,9 +145,9 @@ void renderGameObjects(SDL_Renderer* renderer, GameObjectManager* manager) {
 void checkCollisions(GameObjectManager* manager, int playerX, int playerY, int playerWidth, int playerHeight) {
     if (!manager) return;
 
-    // Ajuster la position du joueur pour les collisions en coordonnées absolues
+    // Convertir la position du joueur en coordonnées monde
     SDL_Rect playerRect = {
-        playerX + manager->viewPortX,  // Convertir en position absolue
+        playerX + manager->viewPortX,
         playerY + manager->viewPortY,
         playerWidth,
         playerHeight
@@ -150,7 +156,7 @@ void checkCollisions(GameObjectManager* manager, int playerX, int playerY, int p
     for (int i = 0; i < manager->count; i++) {
         if (!manager->objects[i].collected) {
             SDL_Rect objectRect = {
-                manager->objects[i].x,  // Position absolue de l'objet
+                manager->objects[i].x,
                 manager->objects[i].y,
                 manager->objects[i].width,
                 manager->objects[i].height

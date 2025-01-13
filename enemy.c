@@ -26,7 +26,7 @@ EnemyManager* createEnemyManager(SDL_Renderer* renderer, int count, GameObjectMa
     EnemyManager* manager = malloc(sizeof(EnemyManager));
     manager->enemies = malloc(sizeof(Enemy) * count);
     manager->count = count;
-    manager->objectManager = objectManager;  // Stockage de la référence
+    manager->objectManager = objectManager;
 
     SDL_Surface* surface = SDL_LoadBMP("mechant.bmp");
     SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -93,6 +93,7 @@ void renderEnemies(SDL_Renderer* renderer, EnemyManager* manager) {
                 FRAME_HEIGHT
             };
 
+            // Convertir les coordonnées absolues en coordonnées écran
             SDL_Rect destRect = {
                 enemy->x - manager->viewPortX,
                 enemy->y - manager->viewPortY,
@@ -100,6 +101,7 @@ void renderEnemies(SDL_Renderer* renderer, EnemyManager* manager) {
                 enemy->height * 2
             };
 
+            // Ne rendre que si l'ennemi est visible à l'écran
             if (destRect.x + destRect.w >= 0 && destRect.x <= 1280 &&
                 destRect.y + destRect.h >= 0 && destRect.y <= 960) {
                 SDL_RenderCopy(renderer, enemy->texture, &srcRect, &destRect);
@@ -112,8 +114,9 @@ void updateEnemies(EnemyManager* manager, int playerX, int playerY) {
     for (int i = 0; i < manager->count; i++) {
         Enemy* enemy = &manager->enemies[i];
         if (!enemy->isDead) {
-            float dx = playerX - enemy->x;
-            float dy = playerY - enemy->y;
+            // Utiliser les coordonnées absolues du joueur pour le calcul
+            float dx = (playerX + manager->viewPortX) - enemy->x;
+            float dy = (playerY + manager->viewPortY) - enemy->y;
             float distance = sqrt(dx * dx + dy * dy);
 
             if (distance < 300 && distance > 5) {

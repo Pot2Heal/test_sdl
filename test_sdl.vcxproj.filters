@@ -33,6 +33,9 @@
     <ClCompile Include="player.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="menu.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h">
@@ -48,6 +51,9 @@
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
     <ClInclude Include="player.h">
+      <Filter>Fichiers de ressources</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
   </ItemGroup>

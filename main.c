@@ -3,6 +3,7 @@
 #include <SDL2/SDL_ttf.h>
 #include "map.h"
 #include "animation.h"
+#include "gameobject.h"
 
 typedef struct {
     int x, y, width, height;
@@ -13,22 +14,22 @@ const float zoomFactor = 1.6f;
 
 // Zones interdites
 Rect forbiddenZones[] = {
-    {399, 245, 175, 175},
-    {695, 259, 175, 165},
-    {655, 477, 225, 145},
-    {395, 537, 150, 25},
-    {663, 707, 185, 25},
-    {455, 712, 125, 250},
+    {396, 268, 250, 220}, // Maison en haut a gauche    
+    {872, 256, 400, 230}, // Maison en Haut a droit
+    {820, 573, 550, 250}, // Maison en bas a Gauche
+    {824, 1066, 500, 50}, // Barriere en Bas a Gauche
+    {398, 691, 275, 25}, // Barriere en Haut a Droite
+    {494, 1090, 220, 500}, // Etang
 };
 
 int isInForbiddenZone(int x, int y, Rect* zones, int numZones) {
     for (int i = 0; i < numZones; i++) {
         Rect zone = zones[i];
         if (x >= zone.x && x < zone.x + zone.width && y >= zone.y && y < zone.y + zone.height) {
-            return 1; // Le joueur est dans une zone interdite
+            return 1;
         }
     }
-    return 0; // Le joueur n'est pas dans une zone interdite
+    return 0;
 }
 
 void renderText(SDL_Renderer* renderer, const char* text, int x, int y) {
@@ -89,9 +90,23 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    GameObjectManager* objectManager = createGameObjectManager(renderer, 3);
+    if (!objectManager) {
+        printf("Erreur création GameObjectManager\n");
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
+
+    // Initialiser le viewport du GameObjectManager
+    objectManager->viewPortX = 0;
+    objectManager->viewPortY = 0;
+
     Map map = loadMap("Startermap.bmp", renderer);
     if (!map.texture) {
         printf("Erreur chargement de la carte\n");
+        destroyGameObjectManager(objectManager);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -109,10 +124,9 @@ int main(int argc, char* argv[]) {
 
     SDL_Texture* moveSpriteSheet = loadTexture("sprite.bmp", renderer);
     SDL_Texture* idleSpriteSheet = loadTexture("spriteidle.bmp", renderer);
-    SDL_Texture* currentSpriteSheet = idleSpriteSheet;
-
     if (!moveSpriteSheet || !idleSpriteSheet) {
         printf("Erreur chargement des sprites\n");
+        destroyGameObjectManager(objectManager);
         SDL_DestroyTexture(map.texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -120,7 +134,8 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    map.viewPort.w = (int)(1280 / zoomFactor );
+    SDL_Texture* currentSpriteSheet = idleSpriteSheet;
+    map.viewPort.w = (int)(1280 / zoomFactor);
     map.viewPort.h = (int)(960 / zoomFactor);
 
     Uint32 lastTime = SDL_GetTicks();
@@ -134,6 +149,14 @@ int main(int argc, char* argv[]) {
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) {
                 running = 0;
+            }
+            else if (event.type == SDL_MOUSEBUTTONDOWN) {
+                int mouseX, mouseY;
+                SDL_GetMouseState(&mouseX, &mouseY);
+                if (handleRestartClick(objectManager, mouseX, mouseY)) {
+                    playerX = map.width / 2 - playerFrameWidth / 2;
+                    playerY = map.height / 2 - playerFrameHeight / 2;
+                }
             }
         }
 
@@ -177,21 +200,38 @@ int main(int argc, char* argv[]) {
         if (map.viewPort.y + map.viewPort.h > map.height)
             map.viewPort.y = map.height - map.viewPort.h;
 
-        currentSpriteSheet = moving ? moveSpriteSheet : idleSpriteSheet;
+        // Mettre à jour le viewport des objets
+        updateViewport(objectManager, map.viewPort.x, map.viewPort.y);
 
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
+
+        // Rendre dans le bon ordre
         renderMap(renderer, &map);
+        renderGameObjects(renderer, objectManager);
 
         if (moving) {
-            animateSprite(moveSpriteSheet, renderer, playerFrameWidth, playerFrameHeight, playerNumFramesMove, playerScaleFactor, playerX, playerY, flip);
-        } else {
-            animateSprite(idleSpriteSheet, renderer, playerFrameWidth, playerFrameHeight, playerNumFramesIdle, playerScaleFactor, playerX, playerY, flip);
+            animateSprite(moveSpriteSheet, renderer, playerFrameWidth, playerFrameHeight,
+                playerNumFramesMove, playerScaleFactor,
+                playerX - map.viewPort.x, playerY - map.viewPort.y, flip);
         }
+        else {
+            animateSprite(idleSpriteSheet, renderer, playerFrameWidth, playerFrameHeight,
+                playerNumFramesIdle, playerScaleFactor,
+                playerX - map.viewPort.x, playerY - map.viewPort.y, flip);
+        }
+
+        // Vérifier les collisions avec la position relative du joueur
+        checkCollisions(objectManager,
+            playerX - map.viewPort.x,
+            playerY - map.viewPort.y,
+            playerFrameWidth * playerScaleFactor,
+            playerFrameHeight * playerScaleFactor);
 
         char playerCoordinates[50];
         snprintf(playerCoordinates, sizeof(playerCoordinates), "X: %d, Y: %d", playerX, playerY);
         renderText(renderer, playerCoordinates, 1100, 10);
+        renderScore(renderer, objectManager);
 
         SDL_RenderPresent(renderer);
 
@@ -201,6 +241,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    destroyGameObjectManager(objectManager);
     SDL_DestroyTexture(moveSpriteSheet);
     SDL_DestroyTexture(idleSpriteSheet);
     SDL_DestroyTexture(map.texture);

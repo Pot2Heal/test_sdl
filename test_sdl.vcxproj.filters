@@ -24,12 +24,18 @@
     <ClCompile Include="map.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="gameobject.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h">
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
     <ClInclude Include="map.h">
+      <Filter>Fichiers de ressources</Filter>
+    </ClInclude>
+    <ClInclude Include="gameobject.h">
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
   </ItemGroup>

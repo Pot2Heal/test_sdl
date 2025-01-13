@@ -18,12 +18,12 @@ const float zoomFactor = 1.6f;
 
 // Zones interdites
 Rect forbiddenZones[] = {
-    {396, 268, 250, 220},  // Maison en haut a gauche    
-    {872, 256, 400, 230},  // Maison en Haut a droit
-    {820, 573, 550, 250},  // Maison en bas a Gauche
-    {824, 1066, 500, 50},  // Barriere en Bas a Gauche
-    {398, 691, 275, 25},   // Barriere en Haut a Droite
-    {494, 1090, 220, 500}, // Etang
+    {396, 268, 250, 220},  // Maison en haut à gauche    
+    {872, 256, 400, 230},  // Maison en haut à droite
+    {820, 573, 550, 250},  // Maison en bas à gauche
+    {824, 1066, 500, 50},  // Barrière en bas à gauche
+    {398, 691, 275, 25},   // Barrière en haut à droite
+    {494, 1090, 220, 500}, // Étang
 };
 
 int isInForbiddenZone(int x, int y, Rect* zones, int numZones) {
@@ -63,6 +63,100 @@ void renderText(SDL_Renderer* renderer, const char* text, int x, int y) {
     SDL_DestroyTexture(texture);
     SDL_FreeSurface(surface);
     TTF_CloseFont(font);
+}
+
+void showWelcomeScreen(SDL_Renderer* renderer) {
+    bool welcomeScreen = true;
+    const char* message = "Bienvenue sur DragonBouleZ\n\nLe but est de récupérer les 3 épées dispersées\ndans le monde. Trouvez-les, que ce soit par terre\nou en tuant des ennemis.";
+
+    while (welcomeScreen) {
+        SDL_Event event;
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                return;
+            }
+            if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN) {
+                welcomeScreen = false;
+            }
+        }
+
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderClear(renderer);
+
+        TTF_Font* font = TTF_OpenFont("arial.ttf", 28);
+        if (font) {
+            SDL_Color textColor = { 0, 0, 0, 255 };
+            int y = 300;
+            char line[256];
+            const char* start = message;
+            const char* end = strchr(start, '\n');
+
+            while (end) {
+                int length = end - start;
+                strncpy(line, start, length);
+                line[length] = '\0';
+
+                SDL_Surface* surface = TTF_RenderText_Solid(font, line, textColor);
+                if (surface) {
+                    SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+                    SDL_Rect textRect = {
+                        (1280 - surface->w) / 2,
+                        y,
+                        surface->w,
+                        surface->h
+                    };
+                    SDL_RenderCopy(renderer, texture, NULL, &textRect);
+                    SDL_DestroyTexture(texture);
+                    SDL_FreeSurface(surface);
+                }
+
+                y += 40;
+                start = end + 1;
+                end = strchr(start, '\n');
+            }
+
+            // Dernière ligne
+            SDL_Surface* surface = TTF_RenderText_Solid(font, start, textColor);
+            if (surface) {
+                SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+                SDL_Rect textRect = {
+                    (1280 - surface->w) / 2,
+                    y,
+                    surface->w,
+                    surface->h
+                };
+                SDL_RenderCopy(renderer, texture, NULL, &textRect);
+                SDL_DestroyTexture(texture);
+                SDL_FreeSurface(surface);
+            }
+
+            TTF_CloseFont(font);
+        }
+
+        // Ajouter un message pour continuer
+        TTF_Font* smallFont = TTF_OpenFont("arial.ttf", 20);
+        if (smallFont) {
+            SDL_Color textColor = { 100, 100, 100, 255 };
+            const char* continueMsg = "Cliquez ou appuyez sur une touche pour continuer...";
+            SDL_Surface* surface = TTF_RenderText_Solid(smallFont, continueMsg, textColor);
+            if (surface) {
+                SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+                SDL_Rect textRect = {
+                    (1280 - surface->w) / 2,
+                    800,
+                    surface->w,
+                    surface->h
+                };
+                SDL_RenderCopy(renderer, texture, NULL, &textRect);
+                SDL_DestroyTexture(texture);
+                SDL_FreeSurface(surface);
+            }
+            TTF_CloseFont(smallFont);
+        }
+
+        SDL_RenderPresent(renderer);
+        SDL_Delay(16);
+    }
 }
 
 int main(int argc, char* argv[]) {
@@ -125,6 +219,7 @@ int main(int argc, char* argv[]) {
                     switch (menuAction) {
                     case MENU_PLAY:
                         inMenu = false;
+                        showWelcomeScreen(renderer);
                         break;
                     case MENU_QUIT:
                         running = false;
@@ -249,9 +344,11 @@ int main(int argc, char* argv[]) {
                 }
 
                 if (!isInForbiddenZone(newX, newY, forbiddenZones, sizeof(forbiddenZones) / sizeof(forbiddenZones[0]))) {
-                    // Supprimer les limites arbitraires et ne garder que les forbidden zones
-                    playerX = newX;
-                    playerY = newY;
+                    if (newX >= 0 && newX <= map.width - playerFrameWidth &&
+                        newY >= 0 && newY <= map.height - playerFrameHeight) {
+                        playerX = newX;
+                        playerY = newY;
+                    }
                 }
 
                 // Mise à jour du viewport pour suivre le joueur
@@ -262,13 +359,14 @@ int main(int argc, char* argv[]) {
                 if (map.viewPort.x < 0) {
                     map.viewPort.x = 0;
                 }
+                else if (map.viewPort.x > map.width - map.viewPort.w) {
+                    map.viewPort.x = map.width - map.viewPort.w;
+                }
+
                 if (map.viewPort.y < 0) {
                     map.viewPort.y = 0;
                 }
-                if (map.viewPort.x > map.width - map.viewPort.w) {
-                    map.viewPort.x = map.width - map.viewPort.w;
-                }
-                if (map.viewPort.y > map.height - map.viewPort.h) {
+                else if (map.viewPort.y > map.height - map.viewPort.h) {
                     map.viewPort.y = map.height - map.viewPort.h;
                 }
 

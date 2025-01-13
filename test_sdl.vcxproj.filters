@@ -27,6 +27,12 @@
     <ClCompile Include="gameobject.c">
       <Filter>Fichiers sources</Filter>
     </ClCompile>
+    <ClCompile Include="enemy.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
+    <ClCompile Include="player.c">
+      <Filter>Fichiers sources</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="animation.h">
@@ -36,6 +42,12 @@
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
     <ClInclude Include="gameobject.h">
+      <Filter>Fichiers de ressources</Filter>
+    </ClInclude>
+    <ClInclude Include="enemy.h">
+      <Filter>Fichiers de ressources</Filter>
+    </ClInclude>
+    <ClInclude Include="player.h">
       <Filter>Fichiers de ressources</Filter>
     </ClInclude>
   </ItemGroup>

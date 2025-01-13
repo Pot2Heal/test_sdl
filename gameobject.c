@@ -26,7 +26,7 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
     int positions[][2] = {
         {462, 1275},  // Objet 1
         {1437, 735},  // Objet 2
-        {709, 457}   // Objet 3
+        {0, 0}   // Objet 3
     };
 
     for (int i = 0; i < count; i++) {

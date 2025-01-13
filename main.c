@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <math.h>
 #include "map.h"
 #include "animation.h"
 #include "gameobject.h"
+#include "player.h"
+#include "enemy.h"
 
 typedef struct {
     int x, y, width, height;
@@ -14,11 +17,11 @@ const float zoomFactor = 1.6f;
 
 // Zones interdites
 Rect forbiddenZones[] = {
-    {396, 268, 250, 220}, // Maison en haut a gauche    
-    {872, 256, 400, 230}, // Maison en Haut a droit
-    {820, 573, 550, 250}, // Maison en bas a Gauche
-    {824, 1066, 500, 50}, // Barriere en Bas a Gauche
-    {398, 691, 275, 25}, // Barriere en Haut a Droite
+    {396, 268, 250, 220},  // Maison en haut a gauche    
+    {872, 256, 400, 230},  // Maison en Haut a droit
+    {820, 573, 550, 250},  // Maison en bas a Gauche
+    {824, 1066, 500, 50},  // Barriere en Bas a Gauche
+    {398, 691, 275, 25},   // Barriere en Haut a Droite
     {494, 1090, 220, 500}, // Etang
 };
 
@@ -99,14 +102,21 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    // Initialiser le viewport du GameObjectManager
-    objectManager->viewPortX = 0;
-    objectManager->viewPortY = 0;
+    EnemyManager* enemyManager = createEnemyManager(renderer, 5, objectManager);
+    if (!enemyManager) {
+        printf("Erreur création EnemyManager\n");
+        destroyGameObjectManager(objectManager);
+        SDL_DestroyRenderer(renderer);
+        SDL_DestroyWindow(window);
+        SDL_Quit();
+        return -1;
+    }
 
     Map map = loadMap("Startermap.bmp", renderer);
     if (!map.texture) {
         printf("Erreur chargement de la carte\n");
         destroyGameObjectManager(objectManager);
+        destroyEnemyManager(enemyManager);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
         SDL_Quit();
@@ -127,6 +137,7 @@ int main(int argc, char* argv[]) {
     if (!moveSpriteSheet || !idleSpriteSheet) {
         printf("Erreur chargement des sprites\n");
         destroyGameObjectManager(objectManager);
+        destroyEnemyManager(enemyManager);
         SDL_DestroyTexture(map.texture);
         SDL_DestroyRenderer(renderer);
         SDL_DestroyWindow(window);
@@ -134,9 +145,19 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    SDL_Texture* currentSpriteSheet = idleSpriteSheet;
     map.viewPort.w = (int)(1280 / zoomFactor);
     map.viewPort.h = (int)(960 / zoomFactor);
+
+    // Initialiser le joueur
+    Player player;
+    player.x = playerX;
+    player.y = playerY;
+    player.width = playerFrameWidth;
+    player.height = playerFrameHeight;
+    player.health = 100;
+    player.isAttacking = false;
+    player.attackTimer = 0;
+    initPlayer(&player, renderer);
 
     Uint32 lastTime = SDL_GetTicks();
     Uint32 frameDelay = 16;
@@ -151,11 +172,38 @@ int main(int argc, char* argv[]) {
                 running = 0;
             }
             else if (event.type == SDL_MOUSEBUTTONDOWN) {
-                int mouseX, mouseY;
-                SDL_GetMouseState(&mouseX, &mouseY);
-                if (handleRestartClick(objectManager, mouseX, mouseY)) {
-                    playerX = map.width / 2 - playerFrameWidth / 2;
-                    playerY = map.height / 2 - playerFrameHeight / 2;
+                if (event.button.button == SDL_BUTTON_LEFT) {
+                    // Gestion des attaques
+                    startAttack(&player);
+
+                    // Gestion des dégâts aux ennemis
+                    for (int i = 0; i < enemyManager->count; i++) {
+                        Enemy* enemy = &enemyManager->enemies[i];
+                        if (!enemy->isDead) {
+                            int dx = (enemy->x - enemyManager->viewPortX) - (playerX - map.viewPort.x);
+                            int dy = (enemy->y - enemyManager->viewPortY) - (playerY - map.viewPort.y);
+                            float distance = sqrt(dx * dx + dy * dy);
+
+                            if (distance < 100) {
+                                damageEnemy(enemy, enemyManager);
+                            }
+                        }
+                    }
+
+                    // Gestion du bouton recommencer
+                    if (objectManager->showVictoryMessage) {
+                        int mouseX = event.button.x;
+                        int mouseY = event.button.y;
+                        if (handleRestartClick(objectManager, mouseX, mouseY)) {
+                            // Réinitialiser la position du joueur
+                            playerX = map.width / 2 - playerFrameWidth / 2;
+                            playerY = map.height / 2 - playerFrameHeight / 2;
+
+                            // Réinitialiser les ennemis
+                            destroyEnemyManager(enemyManager);
+                            enemyManager = createEnemyManager(renderer, 5, objectManager);
+                        }
+                    }
                 }
             }
         }
@@ -188,11 +236,15 @@ int main(int argc, char* argv[]) {
             playerY = newY;
         }
 
-        // Update the viewport to follow the player
+        // Mettre à jour la position du joueur
+        player.x = playerX;
+        player.y = playerY;
+
+        // Mise à jour du viewport pour suivre le joueur
         map.viewPort.x = playerX - (map.viewPort.w / 2);
         map.viewPort.y = playerY - (map.viewPort.h / 2);
 
-        // Ensure the viewport stays within the map boundaries
+        // Limites du viewport
         if (map.viewPort.x < 0) map.viewPort.x = 0;
         if (map.viewPort.y < 0) map.viewPort.y = 0;
         if (map.viewPort.x + map.viewPort.w > map.width)
@@ -200,34 +252,39 @@ int main(int argc, char* argv[]) {
         if (map.viewPort.y + map.viewPort.h > map.height)
             map.viewPort.y = map.height - map.viewPort.h;
 
-        // Mettre à jour le viewport des objets
+        // Mise à jour des viewports
         updateViewport(objectManager, map.viewPort.x, map.viewPort.y);
+        updateEnemyViewport(enemyManager, map.viewPort.x, map.viewPort.y);
 
+        // Mise à jour des entités
+        updateEnemies(enemyManager, playerX, playerY);
+        updatePlayer(&player);
+
+        // Rendu
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
         SDL_RenderClear(renderer);
 
-        // Rendre dans le bon ordre
         renderMap(renderer, &map);
         renderGameObjects(renderer, objectManager);
+        renderEnemies(renderer, enemyManager);
 
-        if (moving) {
-            animateSprite(moveSpriteSheet, renderer, playerFrameWidth, playerFrameHeight,
-                playerNumFramesMove, playerScaleFactor,
-                playerX - map.viewPort.x, playerY - map.viewPort.y, flip);
-        }
-        else {
-            animateSprite(idleSpriteSheet, renderer, playerFrameWidth, playerFrameHeight,
-                playerNumFramesIdle, playerScaleFactor,
-                playerX - map.viewPort.x, playerY - map.viewPort.y, flip);
-        }
+        // Rendu du joueur
+        SDL_Texture* currentTexture = player.isAttacking ? player.attackTexture :
+            (moving ? moveSpriteSheet : idleSpriteSheet);
+        int numFrames = player.isAttacking ? 4 : (moving ? playerNumFramesMove : playerNumFramesIdle);
 
-        // Vérifier les collisions avec la position relative du joueur
+        animateSprite(currentTexture, renderer, playerFrameWidth, playerFrameHeight,
+            numFrames, playerScaleFactor,
+            playerX - map.viewPort.x, playerY - map.viewPort.y, flip);
+
+        // Vérification des collisions
         checkCollisions(objectManager,
             playerX - map.viewPort.x,
             playerY - map.viewPort.y,
             playerFrameWidth * playerScaleFactor,
             playerFrameHeight * playerScaleFactor);
 
+        // Affichage des coordonnées et du score
         char playerCoordinates[50];
         snprintf(playerCoordinates, sizeof(playerCoordinates), "X: %d, Y: %d", playerX, playerY);
         renderText(renderer, playerCoordinates, 1100, 10);
@@ -235,18 +292,22 @@ int main(int argc, char* argv[]) {
 
         SDL_RenderPresent(renderer);
 
+        // Gestion du framerate
         Uint32 frameTime = SDL_GetTicks() - frameStart;
         if (frameDelay > frameTime) {
             SDL_Delay(frameDelay - frameTime);
         }
     }
 
+    // Nettoyage
     destroyGameObjectManager(objectManager);
+    destroyEnemyManager(enemyManager);
     SDL_DestroyTexture(moveSpriteSheet);
     SDL_DestroyTexture(idleSpriteSheet);
     SDL_DestroyTexture(map.texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
 
     return 0;

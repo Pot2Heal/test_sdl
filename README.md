@@ -1,6 +1,6 @@
 <h1>Projet Jeux Video</h1>
 
---
+
 
 ## 🎮 Présentation du Projet
 Ce projet de jeu vidéo a été réalisé par une équipe d'étudiants en BTS dans le cadre de nos études. L'objectif était de concevoir, développer et déployer un jeu vidéo jouable, tout en mettant en pratique nos compétences en programmation, graphisme, game design et gestion de projet.

@@ -50,6 +50,7 @@ Ce projet nous a permis de :
 
 ## 🛠️ Fonctionnalités futures
 - Ajouter de nouveaux niveaux
+- Un système de gestion de sauvegarde
 
 
 ---

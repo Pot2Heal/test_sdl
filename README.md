@@ -9,7 +9,7 @@ Ce projet de jeu vidéo a été réalisé par une équipe d'étudiants en BTS da
 - **Genre** : RPG
 - **Plateforme** : Windows
 - **Technologies utilisées** :
-  - Moteur de jeu : SDL2
+  - Moteur de jeu : SDL2. / SDL_TTF / SDL_MIXER
   - Langage de programmation : C
   - Outils graphiques : Photoshop
 - **Durée de développement** : 7 semaines

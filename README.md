@@ -5,8 +5,8 @@
 Ce projet de jeu vidéo a été réalisé par une équipe d'étudiants en BTS dans le cadre de nos études. L'objectif était de concevoir, développer et déployer un jeu vidéo jouable, tout en mettant en pratique nos compétences en programmation, graphisme, game design et gestion de projet.
 
 ### 🌟 Caractéristiques principales
-- **Genre** : [Précisez le type de jeu, ex. plateforme, RPG, FPS, etc.]
-- **Plateforme** : [Windows, MacOS, Linux, Web, etc.]
+- **Genre** : [RPG]
+- **Plateforme** : [Windows]
 - **Technologies utilisées** :
   - Moteur de jeu : [Unity, Unreal Engine, Godot, etc.]
   - Langage de programmation : [C#, Python, etc.]

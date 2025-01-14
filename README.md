@@ -5,49 +5,30 @@
 Ce projet de jeu vidéo a été réalisé par une équipe d'étudiants en BTS dans le cadre de nos études. L'objectif était de concevoir, développer et déployer un jeu vidéo jouable, tout en mettant en pratique nos compétences en programmation, graphisme, game design et gestion de projet.
 
 ### 🌟 Caractéristiques principales
-- **Genre** : [RPG]
-- **Plateforme** : [Windows]
+- **Genre** : RPG
+- **Plateforme** : Windows
 - **Technologies utilisées** :
-  - Moteur de jeu : [Unity, Unreal Engine, Godot, etc.]
-  - Langage de programmation : [C#, Python, etc.]
-  - Outils graphiques : [Blender, Photoshop, etc.]
-- **Durée de développement** : [Durée en semaines ou mois]
+  - Moteur de jeu : SDL2
+  - Langage de programmation : C
+  - Outils graphiques : Photoshop
+- **Durée de développement** : 7 semaines
 
 ---
 
 ## 🎯 Objectifs pédagogiques
 Ce projet nous a permis de :
 - Appliquer les concepts de développement logiciel (conception, programmation, tests).
-- Travailler en équipe selon des méthodologies agiles (Scrum, Kanban, etc.).
+- Travailler en équipe selon des méthodologies agiles (gantt , padlet).
 - Développer des compétences en game design et storytelling.
-- Créer des assets graphiques originaux.
+  
 
 ---
 
-## 🚀 Installation et lancement
-
-### Prérequis
-- [Exemple : Windows 10, 4 Go de RAM minimum, DirectX 11, etc.]
-- [Exemple : Unity version 2022.3+ ou tout autre moteur nécessaire]
-
-### Étapes
-1. **Cloner le dépôt** :
-   ```bash
-   git clone https://github.com/votre-utilisateur/nom-du-repo.git
-   ```
-2. **Naviguer dans le dossier** :
-   ```bash
-   cd nom-du-repo
-   ```
-3. **Lancer le jeu** :
-   [Ajoutez ici les étapes pour exécuter votre jeu]
-
----
 
 ## 📖 Règles du jeu
-[Expliquez brièvement les règles et objectifs principaux du jeu, par exemple :]
-- L'objectif est de collecter tous les objets tout en évitant les ennemis.
-- Utilisez les touches [WASD] pour vous déplacer et [Espace] pour sauter.
+
+- L'objectif est de collecter tous les épées et de tuer les ennemis.
+- Utilisez les touches zqsd pour vous déplacer et clique gauche pour attaquer.
 
 ---
 
@@ -58,34 +39,24 @@ Ce projet nous a permis de :
 ---
 
 ## 👥 Équipe
-- **Chef de projet** : [Nom, spécialité]
-- **Développeurs** : [Nom 1, Nom 2, etc.]
-- **Graphistes** : [Nom 1, Nom 2, etc.]
-- **Game designers** : [Nom 1, Nom 2, etc.]
+- **Dylan** 
+- **Hayk** 
+- **Frank** 
+- **Josué**
 
 ---
 
 ## 🛠️ Fonctionnalités futures
-- [Ajouter de nouveaux niveaux]
-- [Multijoueur en ligne]
-- [Optimisation des performances]
+- Ajouter de nouveaux niveaux
+
 
 ---
 
 ## 📝 Remerciements
 Nous tenons à remercier :
-- [Les professeurs pour leur accompagnement.]
-- [Nos camarades pour leur soutien.]
-- [Toute autre personne ou organisation impliquée.]
+- Les professeurs pour leur accompagnement.
+- Nos camarades pour leur soutien.
 
 ---
 
-## 📄 Licence
-[Indiquez la licence de votre projet, par exemple MIT, GPL, etc. Ajoutez un fichier LICENSE au besoin.]
-
 ---
-
-## 📫 Contact
-Pour toute question ou suggestion, vous pouvez nous contacter via :
-- [Email ou autre moyen de contact]
-- [Lien vers le site ou le portfolio de l'équipe]

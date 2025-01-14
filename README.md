@@ -35,6 +35,7 @@ Ce projet nous a permis de :
 
 ## 📸 Aperçu
 ![Capture d'écran 1](menu.png)
+---
 ![Capture d'écran 2](jeux.png)
 
 ---
@@ -55,7 +56,7 @@ Ce projet nous a permis de :
 
 ## 📝 Remerciements
 Nous tenons à remercier :
-- Les professeurs pour leur accompagnement.
+- Madame Pauly pour son accompagnement.
 - Nos camarades pour leur soutien.
 
 ---

@@ -56,7 +56,7 @@ Ce projet nous a permis de :
 
 ## 📝 Remerciements
 Nous tenons à remercier :
-- Madame Pauly pour son accompagnement.
+- **Madame Pauly** pour son accompagnement.
 - Nos camarades pour leur soutien.
 
 ---

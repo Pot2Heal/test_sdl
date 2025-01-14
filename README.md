@@ -42,7 +42,7 @@ Ce projet nous a permis de :
 
 ## 👥 Équipe
 - **Dylan** 
-- **Hayk** 
+- **Haik** 
 - **Frank** 
 - **Josué**
 

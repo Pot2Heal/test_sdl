@@ -369,7 +369,7 @@ int main(int argc, char* argv[]) {
                 int screenY = playerY - map.viewPort.y;
                 // Mise à jour des viewports
                 updateViewport(objectManager, map.viewPort.x, map.viewPort.y);
-                updateEnemyViewport(enemyManager, map.viewPort.x, map.viewPort.y);cd 
+                updateEnemyViewport(enemyManager, map.viewPort.x, map.viewPort.y);
 
                 // Mise à jour des entités
                 updateEnemies(enemyManager, playerX, playerY);

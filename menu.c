@@ -2,6 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+// Définition des constantes de volume si elles ne sont pas déjà définies par SDL_mixer
+#ifndef MIX_MAX_VOLUME
+#define MIX_MAX_VOLUME 128
+#endif
+
+#ifndef MIX_MIN_VOLUME
+#define MIX_MIN_VOLUME 0
+#endif
+
 Menu* createMenu(SDL_Renderer* renderer) {
     Menu* menu = malloc(sizeof(Menu));
     if (!menu) return NULL;
@@ -38,6 +47,10 @@ Menu* createMenu(SDL_Renderer* renderer) {
     menu->optionsButton = (SDL_Rect){ 490, 500, 300, 60 };
     menu->quitButton = (SDL_Rect){ 490, 600, 300, 60 };
     menu->backButton = (SDL_Rect){ 490, 700, 300, 60 };
+
+    // Configuration du slider de volume (déplacé en dessous des résolutions)
+    menu->volumeSlider = (SDL_Rect){ 490, 550, 300, 20 };
+    menu->currentVolume = MIX_MAX_VOLUME; // Volume maximum par défaut
 
     // Initialiser les résolutions disponibles
     menu->resolutions = malloc(sizeof(Resolution) * 3);
@@ -154,6 +167,35 @@ void renderMenu(SDL_Renderer* renderer, Menu* menu) {
             }
         }
 
+        // Afficher le slider de volume
+        SDL_SetRenderDrawColor(renderer, 80, 80, 80, 255);
+        SDL_RenderFillRect(renderer, &menu->volumeSlider);
+
+        // Afficher le curseur du volume
+        SDL_Rect volumeCursor = {
+            menu->volumeSlider.x + (menu->volumeSlider.w * menu->currentVolume / MIX_MAX_VOLUME),
+            menu->volumeSlider.y,
+            10,
+            20
+        };
+        SDL_SetRenderDrawColor(renderer, 200, 200, 200, 255);
+        SDL_RenderFillRect(renderer, &volumeCursor);
+
+        // Texte "Volume"
+        if (font) {
+            SDL_Surface* surface = TTF_RenderText_Solid(font, "Volume", textColor);
+            SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
+            SDL_Rect textRect = {
+                menu->volumeSlider.x,
+                menu->volumeSlider.y - 30,
+                surface->w,
+                surface->h
+            };
+            SDL_RenderCopy(renderer, texture, NULL, &textRect);
+            SDL_DestroyTexture(texture);
+            SDL_FreeSurface(surface);
+        }
+
         // Bouton retour
         SDL_RenderFillRect(renderer, &menu->backButton);
         if (font) {
@@ -196,6 +238,10 @@ int handleMenuClick(Menu* menu, int x, int y) {
             menu->showOptions = false;
             return MENU_BACK;
         }
+        if (y >= menu->volumeSlider.y && y <= menu->volumeSlider.y + menu->volumeSlider.h) {
+            updateVolume(menu, x);
+            return MENU_VOLUME_CHANGE;
+        }
         for (int i = 0; i < menu->resolutionCount; i++) {
             if (SDL_PointInRect(&point, &menu->resolutionButtons[i])) {
                 menu->currentResolution = i;
@@ -204,6 +250,15 @@ int handleMenuClick(Menu* menu, int x, int y) {
         }
     }
     return MENU_NOTHING;
+}
+
+void updateVolume(Menu* menu, int x) {
+    if (x < menu->volumeSlider.x) x = menu->volumeSlider.x;
+    if (x > menu->volumeSlider.x + menu->volumeSlider.w) x = menu->volumeSlider.x + menu->volumeSlider.w;
+
+    menu->currentVolume = ((x - menu->volumeSlider.x) * MIX_MAX_VOLUME) / menu->volumeSlider.w;
+    Mix_Volume(-1, menu->currentVolume); // Mettre à jour le volume des effets sonores
+    Mix_VolumeMusic(menu->currentVolume); // Mettre à jour le volume de la musique
 }
 
 void applyResolution(SDL_Window* window, Resolution resolution) {

@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
+#include <SDL2/SDL_mixer.h>
 #include <math.h>
 #include "map.h"
 #include "animation.h"
@@ -115,7 +116,7 @@ void showWelcomeScreen(SDL_Renderer* renderer) {
                 end = strchr(start, '\n');
             }
 
-            // Dernière ligne
+           
             SDL_Surface* surface = TTF_RenderText_Solid(font, start, textColor);
             if (surface) {
                 SDL_Texture* texture = SDL_CreateTextureFromSurface(renderer, surface);
@@ -181,6 +182,12 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+        printf("Erreur lors de l'initialisation de SDL_Mixer: %s\n", Mix_GetError());
+        SDL_Quit();
+        return -1;
+    }
+
     SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!renderer) {
         printf("Erreur création renderer: %s\n", SDL_GetError());
@@ -188,6 +195,16 @@ int main(int argc, char* argv[]) {
         SDL_Quit();
         return -1;
     }
+
+    Mix_Music* musique = Mix_LoadMUS("musikaaa.mp3");
+    if (!musique) {
+        printf("Erreur lors du chargement de la musique: %s\n", Mix_GetError());
+        Mix_CloseAudio();
+        SDL_Quit();
+        return -1;
+    }
+
+    Mix_PlayMusic(musique, -1);
 
     // Création du menu
     Menu* menu = createMenu(renderer);

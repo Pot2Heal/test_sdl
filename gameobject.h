@@ -2,6 +2,7 @@
 #define GAMEOBJECT_H
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_mixer.h>
 #include <stdbool.h>
 
 typedef struct {
@@ -19,6 +20,7 @@ typedef struct {
     int viewPortY;
     bool showVictoryMessage;
     SDL_Rect restartButton;
+    Mix_Chunk* victorySound; // Musique de victoire
 } GameObjectManager;
 
 GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count);

@@ -16,6 +16,12 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
     manager->collected = 0;
     manager->showVictoryMessage = false;
 
+    // Chargement du son de victoire
+    manager->victorySound = Mix_LoadWAV("win.mp3");
+    if (!manager->victorySound) {
+        printf("Erreur chargement son de victoire: %s\n", Mix_GetError());
+    }
+
     // Position et taille du bouton de redémarrage
     manager->restartButton.x = 500;
     manager->restartButton.y = 500;
@@ -26,7 +32,7 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
     int positions[][2] = {
         {462, 1275},  // Objet 1
         {1437, 735},  // Objet 2
-        {0, 0}   // Objet 3 (Caché) t pas sensé le voir ok 
+        {0, 0}   // Objet 3 (Caché)
     };
 
     for (int i = 0; i < count; i++) {
@@ -40,6 +46,9 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
             printf("ERREUR : Impossible de charger %s\n", filename);
             for (int j = 0; j < i; j++) {
                 SDL_DestroyTexture(manager->objects[j].texture);
+            }
+            if (manager->victorySound) {
+                Mix_FreeChunk(manager->victorySound);
             }
             free(manager->objects);
             free(manager);
@@ -58,6 +67,9 @@ GameObjectManager* createGameObjectManager(SDL_Renderer* renderer, int count) {
 
 void destroyGameObjectManager(GameObjectManager* manager) {
     if (manager) {
+        if (manager->victorySound) {
+            Mix_FreeChunk(manager->victorySound);
+        }
         for (int i = 0; i < manager->count; i++) {
             SDL_DestroyTexture(manager->objects[i].texture);
         }
@@ -100,7 +112,7 @@ void renderGameObjects(SDL_Renderer* renderer, GameObjectManager* manager) {
         SDL_FreeSurface(surface);
 
         // Dessiner le fond semi-transparent
-        SDL_Rect messageBox = { 400, 300, 400, 300 };
+        SDL_Rect messageBox = { 350, 300, 551, 300 };
         SDL_RenderCopy(renderer, overlay, NULL, &messageBox);
         SDL_DestroyTexture(overlay);
 
@@ -141,11 +153,9 @@ void renderGameObjects(SDL_Renderer* renderer, GameObjectManager* manager) {
         }
     }
 }
-
 void checkCollisions(GameObjectManager* manager, int playerX, int playerY, int playerWidth, int playerHeight) {
     if (!manager) return;
 
-    // Convertir la position du joueur en coordonnées monde
     SDL_Rect playerRect = {
         playerX + manager->viewPortX,
         playerY + manager->viewPortY,
@@ -166,6 +176,13 @@ void checkCollisions(GameObjectManager* manager, int playerX, int playerY, int p
                 manager->objects[i].collected = true;
                 manager->collected++;
                 printf("Objet %d collecté ! Score : %d/3\n", i + 1, manager->collected);
+
+                // Jouer le son de victoire si tous les objets sont collectés
+                if (manager->collected == manager->count && manager->victorySound) {
+                    Mix_HaltMusic(); // Arrêter la musique
+                    Mix_PlayChannel(-1, manager->victorySound, 0); // Jouer le son une fois
+                    // Ne pas attendre la fin du son, laisser le jeu continuer
+                }
             }
         }
     }

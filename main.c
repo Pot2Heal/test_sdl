@@ -344,36 +344,29 @@ int main(int argc, char* argv[]) {
                 }
 
                 if (!isInForbiddenZone(newX, newY, forbiddenZones, sizeof(forbiddenZones) / sizeof(forbiddenZones[0]))) {
-                    if (newX >= 0 && newX <= map.width - playerFrameWidth &&
-                        newY >= 0 && newY <= map.height - playerFrameHeight) {
-                        playerX = newX;
-                        playerY = newY;
-                    }
+                    // Supprimer les limites arbitraires et ne garder que les forbidden zones
+                    playerX = newX;
+                    playerY = newY;
                 }
-
                 // Mise à jour du viewport pour suivre le joueur
                 map.viewPort.x = playerX - (map.viewPort.w / 2);
                 map.viewPort.y = playerY - (map.viewPort.h / 2);
-
                 // Limites du viewport
                 if (map.viewPort.x < 0) {
                     map.viewPort.x = 0;
                 }
-                else if (map.viewPort.x > map.width - map.viewPort.w) {
-                    map.viewPort.x = map.width - map.viewPort.w;
-                }
-
                 if (map.viewPort.y < 0) {
                     map.viewPort.y = 0;
                 }
-                else if (map.viewPort.y > map.height - map.viewPort.h) {
+                if (map.viewPort.x > map.width - map.viewPort.w) {
+                    map.viewPort.x = map.width - map.viewPort.w;
+                }
+                if (map.viewPort.y > map.height - map.viewPort.h) {
                     map.viewPort.y = map.height - map.viewPort.h;
                 }
-
                 // Calcul de la position du joueur à l'écran
                 int screenX = playerX - map.viewPort.x;
                 int screenY = playerY - map.viewPort.y;
-
                 // Mise à jour des viewports
                 updateViewport(objectManager, map.viewPort.x, map.viewPort.y);
                 updateEnemyViewport(enemyManager, map.viewPort.x, map.viewPort.y);

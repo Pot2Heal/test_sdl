@@ -35,7 +35,7 @@ Ce projet nous a permis de :
 
 ## 📸 Aperçu
 ![Capture d'écran 1](menu.png)
-![Capture d'écran 2](path/to/screenshot2.png)
+![Capture d'écran 2](jeux.png)
 
 ---
 
